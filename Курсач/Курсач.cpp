@@ -244,7 +244,7 @@ WinWindow* winWindow;
 #pragma endregion
 void Shuffle(WPARAM wParam, LPARAM lParam)
 {
-	int Iterations = 20;
+	int Iterations = 1;
 	this_thread::sleep_for(chrono::milliseconds(2000));
 	GameStarted = true;
 	for (int j = 0; j < Iterations; j++)
@@ -314,7 +314,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE:
 	{
 		
-		//HWND okButton = CreateWindow(L"Button", L"Готово", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, 100, 100, 100, 100, hWnd, reinterpret_cast<HMENU>(ButtonOk_Click), nullptr, nullptr);
+		
 
 		SetTimer(hWnd, IDT_TIMER1, 1, (TIMERPROC)NULL);
 		labelCounter = CreateWindow(L"STATIC", L"COUNT 0", WS_CHILD | WS_VISIBLE, 10, 10, 100, 20, hWnd, nullptr, nullptr, nullptr);
@@ -399,6 +399,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 		case ShowPlayersButton_Click:
 		{
+			HWND hListBox = CreateWindow(L"listbox", nullptr, WS_VISIBLE | LBS_STANDARD | LBS_WANTKEYBOARDINPUT | WS_CHILD, 100, 100, 500, 500, hWnd, nullptr, nullptr, nullptr);
 			FILE* stream;
 			fopen_s(&stream, FileName, "rb+");
 			int len = _filelength(_fileno(stream)) / sizeof(Player);
@@ -407,7 +408,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				Player player;
 				fread(&player, sizeof(Player), 1, stream);
-				MessageBox(hWnd, player.GetName(), player.GetTime().ToLPCWSTR(), MB_OK);
+				//SendMessage(hListBox,)
+				MessageBox(hWnd, player.ToString(),player.ToString(), MB_OK);
 			}
 			fclose(stream);
 		}
