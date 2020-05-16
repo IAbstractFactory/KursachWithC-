@@ -10,6 +10,7 @@
 #include <cassert>
 #define ButtonOk_Click 1231
 #define ShowPlayersButton_Click 2222
+#define LIST_ID 1233
 using namespace std;
 HINSTANCE hInst;
 int Counter = 0;
@@ -47,7 +48,7 @@ public:
 	}
 };
 Timer timer;
-
+static HWND hListBox;
 int width = 1000;//МОЖНО МЕНЯТЬ НА ВАШ ВКУС
 int height = 1000;//МОЖНО МЕНЯТЬ НА ВАШ ВКУС
 int ButtonSize = 100;//МОЖНО МЕНЯТЬ НА ВАШ ВКУС
@@ -313,8 +314,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 	case WM_CREATE:
 	{
-		
-		
+
+
 
 		SetTimer(hWnd, IDT_TIMER1, 1, (TIMERPROC)NULL);
 		labelCounter = CreateWindow(L"STATIC", L"COUNT 0", WS_CHILD | WS_VISIBLE, 10, 10, 100, 20, hWnd, nullptr, nullptr, nullptr);
@@ -397,9 +398,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			winWindow->Invoke(hWnd);
 		}
 		break;
+
+
 		case ShowPlayersButton_Click:
 		{
-			HWND hListBox = CreateWindow(L"listbox", nullptr, WS_VISIBLE | LBS_STANDARD | LBS_WANTKEYBOARDINPUT | WS_CHILD, 100, 100, 500, 500, hWnd, nullptr, nullptr, nullptr);
+			int WIDTH = 500;
+			int HEIGHT = 500;
+			hListBox = CreateWindow(L"LISTBOX", NULL, WS_CHILD | WS_VISIBLE | LBS_STANDARD | WS_OVERLAPPEDWINDOW, 300, 700, WIDTH, HEIGHT, hWnd, NULL, NULL, NULL); //CreateWindow(L"listbox", nullptr, WS_VISIBLE | LBS_STANDARD | LBS_WANTKEYBOARDINPUT | WS_OVERLAPPEDWINDOW, 100, 100, 500, 500, hWnd, nullptr, hInst, nullptr);
+			HWND clearButton = CreateWindow(L"Button", L"Очистить", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WIDTH / 2 - 50, HEIGHT - 70, 100, 20, hListBox, reinterpret_cast<HMENU>(Button_Click), nullptr, nullptr);
 			FILE* stream;
 			fopen_s(&stream, FileName, "rb+");
 			int len = _filelength(_fileno(stream)) / sizeof(Player);
@@ -408,12 +414,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			{
 				Player player;
 				fread(&player, sizeof(Player), 1, stream);
-				//SendMessage(hListBox,)
-				MessageBox(hWnd, player.ToString(),player.ToString(), MB_OK);
+				SendMessage(hListBox, LB_ADDSTRING, 0, (LPARAM)player.ToString());
+				//MessageBox(hWnd, player.ToString(),player.ToString(), MB_OK);
 			}
 			fclose(stream);
 		}
 		break;
+
+
 		case IDM_EXIT:
 			DestroyWindow(hWnd);
 			break;
@@ -423,15 +431,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 	}
 	break;
-	case WM_PAINT:
-	{
-		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(hWnd, &ps);
-		// TODO: Добавьте сюда любой код прорисовки, использующий HDC...
-		EndPaint(hWnd, &ps);
-
-	}
-	break;
+	
 	case WM_DESTROY:
 		PostQuitMessage(0);
 

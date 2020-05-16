@@ -34,20 +34,13 @@ public:
 	wchar_t* ToString()
 	{
 
-		wchar_t* playerToString = new wchar_t[50];
 
-		wcscpy_s(playerToString, wcslen(playerToString), L"");
+		wchar_t* buff = new wchar_t[30];
+		wsprintf(buff, L"%ws / %ws / %d", name, time.ToLPCWSTR(), steps);
 
-		wcscat_s(playerToString, wcslen(playerToString), name);
-		wcscat_s(playerToString, wcslen(playerToString), L":    ");
-		wcscat_s(playerToString, wcslen(playerToString), time.ToLPCWSTR());
-		wcscat_s(playerToString, wcslen(playerToString), L"      :    ");
-		wchar_t buff[10];
-		wsprintf(buff, L"%d", steps);
-		wcscat_s(playerToString, wcslen(playerToString), buff);
 
-		return playerToString;
-		//TODO: »—œ–¿¬‹ ›“Œ √Œ¬ÕŒ
+		return buff;
+
 	}
 
 
