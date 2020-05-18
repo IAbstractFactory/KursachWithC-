@@ -22,6 +22,12 @@ class Timer
 	Time time;
 
 public:
+	void Reset()
+	{
+		time.milliseconds = 0;
+		time.minutes = 0;
+		time.seconds = 0;
+	}
 	void Active()
 	{
 		if (time.milliseconds == 63)
@@ -252,7 +258,7 @@ WinWindow* winWindow;
 #pragma endregion
 void Shuffle(WPARAM wParam, LPARAM lParam)
 {
-	int Iterations = 1;
+	int Iterations = 50;
 	this_thread::sleep_for(chrono::milliseconds(2000));
 	GameStarted = true;
 	for (int j = 0; j < Iterations; j++)
@@ -407,13 +413,31 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			winWindow->Invoke(hWnd);
 		}
 		break;
-		case ClearPlayers: {
+		case ClearPlayers:
+		{
 			FILE* f;
 			fopen_s(&f, FileName, "wb+");
 			fclose(f);
 			MessageBox(hWnd, L"Очищено!", L"sad", MB_OK);
-			break;
 		}
+		break;
+		case RestartButton_Click:
+		{
+			GameStarted = false;
+			WinAcces = false;
+			victory = false;
+			firstClick = false;
+			Counter = 0;
+			timer.Reset();
+			SetWindowText(labelTimer, timer.ToString());
+
+			wchar_t buffer[256];
+			wsprintf(buffer, L"COUNT %d", Counter);
+			SetWindowText(labelCounter, buffer);
+			Shuffle(wParam, lParam);
+		}
+		break;
+
 
 		case ShowPlayersButton_Click:
 		{
