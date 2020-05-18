@@ -57,9 +57,9 @@ public:
 };
 Timer timer;
 static HWND hListBox;
-int width = 1000;//МОЖНО МЕНЯТЬ НА ВАШ ВКУС
-int height = 1000;//МОЖНО МЕНЯТЬ НА ВАШ ВКУС
-int ButtonSize = 100;//МОЖНО МЕНЯТЬ НА ВАШ ВКУС
+int width = 1000;//МОЖНО МЕНЯТЬ 
+int height = 1000;//МОЖНО МЕНЯТЬ 
+int ButtonSize = 70;//МОЖНО МЕНЯТЬ 
 void ButtonMove(int TrueRecX, int TrueRecY, LPARAM lParam);
 class WinWindow
 {
@@ -246,19 +246,20 @@ static HWND labelCounter;
 static HWND labelTimer;
 HWND SHOW_PLAYERS_BUTTON;
 HWND restartButton;
+HWND clearButton;
 
-//int Counter = 0;
-//Timer timer;
+
 
 HWND textBox;
 wchar_t str[80];
 WinWindow* winWindow;
-//SendMessage(hEdit, WM_GETTEXT, 80, LPARAM(str)); //считали
+
 
 #pragma endregion
 void Shuffle(WPARAM wParam, LPARAM lParam)
 {
-	int Iterations = 50;
+	srand(time(NULL));
+	int Iterations = rand() % 30 + 20; // Количество итераций
 	this_thread::sleep_for(chrono::milliseconds(2000));
 	GameStarted = true;
 	for (int j = 0; j < Iterations; j++)
@@ -336,8 +337,9 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		int w = width / 2 - 2 * ButtonSize;
 		int h = height / 2 - 4 * ButtonSize > 0 ? height / 2 - 4 * ButtonSize : 10;
-		SHOW_PLAYERS_BUTTON = CreateWindow(L"Button", L"Показать игроков", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, w / 2 - 140, h / 2 + 10, 150, 30, hWnd, reinterpret_cast<HMENU>(ShowPlayersButton_Click), nullptr, nullptr);
-		restartButton = CreateWindow(L"Button", L"Начать новую игру", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, w / 2 - 140, h / 2 + 60, 150, 30, hWnd, reinterpret_cast<HMENU>(RestartButton_Click), nullptr, nullptr);
+		clearButton = CreateWindow(L"Button", L"Очистить список", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, w / 2 - 140, h / 2 + 50, 150, 30, hWnd, reinterpret_cast<HMENU>(ClearPlayers), nullptr, nullptr);
+		SHOW_PLAYERS_BUTTON = CreateWindow(L"Button", L"Показать игроков", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, w / 2 - 140, h / 2 + 100, 150, 30, hWnd, reinterpret_cast<HMENU>(ShowPlayersButton_Click), nullptr, nullptr);
+		restartButton = CreateWindow(L"Button", L"Начать новую игру", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, w / 2 - 140, h / 2 + 150, 150, 30, hWnd, reinterpret_cast<HMENU>(RestartButton_Click), nullptr, nullptr);
 		int k = 0;
 		for (int i = 0; i < 4; i++)
 		{
@@ -418,7 +420,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			FILE* f;
 			fopen_s(&f, FileName, "wb+");
 			fclose(f);
-			MessageBox(hWnd, L"Очищено!", L"sad", MB_OK);
+			MessageBox(hWnd, L"Очищено!", L"", MB_OK);
+
 		}
 		break;
 		case RestartButton_Click:
@@ -441,10 +444,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		case ShowPlayersButton_Click:
 		{
+			FILE* f;
+			fopen_s(&f, FileName, "ab+");
+			fclose(f);
+
 			int WIDTH = 500;
 			int HEIGHT = 500;
 			hListBox = CreateWindow(L"LISTBOX", NULL, WS_VISIBLE | LBS_STANDARD | WS_OVERLAPPEDWINDOW | WS_EX_TOPMOST, 300, 400, WIDTH, HEIGHT, NULL, NULL, NULL, NULL); //CreateWindow(L"listbox", nullptr, WS_VISIBLE | LBS_STANDARD | LBS_WANTKEYBOARDINPUT | WS_OVERLAPPEDWINDOW, 100, 100, 500, 500, hWnd, nullptr, hInst, nullptr);
-			HWND clearButton = CreateWindow(L"Button", L"Очистить", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WIDTH / 2 - 50, HEIGHT - 70, 100, 20, hListBox, reinterpret_cast<HMENU>(ClearPlayers), nullptr, nullptr);
+
 			FILE* stream;
 			fopen_s(&stream, FileName, "rb+");
 			int len = _filelength(_fileno(stream)) / sizeof(Player);
@@ -454,7 +461,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 				Player player;
 				fread(&player, sizeof(Player), 1, stream);
 				SendMessage(hListBox, LB_ADDSTRING, 0, (LPARAM)player.ToString());
-				//MessageBox(hWnd, player.ToString(),player.ToString(), MB_OK);
+
 			}
 			fclose(stream);
 		}

@@ -36,7 +36,7 @@ public:
 
 
 		wchar_t* buff = new wchar_t[30];
-		wsprintf(buff, L"%ws / %ws / %d", name, time.ToLPCWSTR(), steps);
+		wsprintf(buff, L"%ws / %ws / %d", time.ToLPCWSTR(), name, steps);
 
 
 		return buff;
