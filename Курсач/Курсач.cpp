@@ -11,6 +11,8 @@
 #define ButtonOk_Click 1231
 #define ShowPlayersButton_Click 2222
 #define LIST_ID 1233
+#define ClearPlayers 1435
+#define RestartButton_Click 1446
 using namespace std;
 HINSTANCE hInst;
 int Counter = 0;
@@ -74,7 +76,11 @@ public:
 		fopen_s(&stream, FileName, "ab+");
 		fwrite(player, sizeof(Player), 1, stream);
 		fclose(stream);
-
+		ShowWindow(okButton, SW_HIDE);
+		ShowWindow(NameTextBox, SW_HIDE);
+		ShowWindow(NameLabel, SW_HIDE);
+		ShowWindow(VictoryMessageLabel, SW_HIDE);
+		//EnableWindow(okButton, false);
 	}
 	WinWindow(int height, int width, int buttonSize, HWND hWnd)
 	{
@@ -233,6 +239,7 @@ bool firstClick = false;
 static HWND labelCounter;
 static HWND labelTimer;
 HWND SHOW_PLAYERS_BUTTON;
+HWND restartButton;
 
 //int Counter = 0;
 //Timer timer;
@@ -323,7 +330,8 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		int w = width / 2 - 2 * ButtonSize;
 		int h = height / 2 - 4 * ButtonSize > 0 ? height / 2 - 4 * ButtonSize : 10;
-		SHOW_PLAYERS_BUTTON = CreateWindow(L"Button", L"Показать челов", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, w / 2, h / 2, 150, 30, hWnd, reinterpret_cast<HMENU>(ShowPlayersButton_Click), nullptr, nullptr);
+		SHOW_PLAYERS_BUTTON = CreateWindow(L"Button", L"Показать игроков", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, w / 2 - 140, h / 2 + 10, 150, 30, hWnd, reinterpret_cast<HMENU>(ShowPlayersButton_Click), nullptr, nullptr);
+		restartButton = CreateWindow(L"Button", L"Начать новую игру", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, w / 2 - 140, h / 2 + 60, 150, 30, hWnd, reinterpret_cast<HMENU>(RestartButton_Click), nullptr, nullptr);
 		int k = 0;
 		for (int i = 0; i < 4; i++)
 		{
@@ -352,14 +360,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 	case WM_COMMAND:
 	{
-		if (WinAcces && !victory)
-		{
-			firstClick = true;
-			Counter++;
-			wchar_t buffer[256];
-			wsprintf(buffer, L"COUNT %d", Counter);
-			SetWindowText(labelCounter, buffer);
-		}
+
 		int wmId = LOWORD(wParam);
 		// Разобрать выбор в меню:
 		switch (wmId)
@@ -370,6 +371,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			break;
 		case Button_Click:
 		{
+			if (WinAcces && !victory)
+			{
+				firstClick = true;
+				Counter++;
+				wchar_t buffer[256];
+				wsprintf(buffer, L"COUNT %d", Counter);
+				SetWindowText(labelCounter, buffer);
+			}
 			if (GameStarted && !victory)
 			{
 				HWND h = (HWND)lParam;
@@ -398,14 +407,20 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 			winWindow->Invoke(hWnd);
 		}
 		break;
-
+		case ClearPlayers: {
+			FILE* f;
+			fopen_s(&f, FileName, "wb+");
+			fclose(f);
+			MessageBox(hWnd, L"Очищено!", L"sad", MB_OK);
+			break;
+		}
 
 		case ShowPlayersButton_Click:
 		{
 			int WIDTH = 500;
 			int HEIGHT = 500;
-			hListBox = CreateWindow(L"LISTBOX", NULL, WS_CHILD | WS_VISIBLE | LBS_STANDARD | WS_OVERLAPPEDWINDOW, 300, 700, WIDTH, HEIGHT, hWnd, NULL, NULL, NULL); //CreateWindow(L"listbox", nullptr, WS_VISIBLE | LBS_STANDARD | LBS_WANTKEYBOARDINPUT | WS_OVERLAPPEDWINDOW, 100, 100, 500, 500, hWnd, nullptr, hInst, nullptr);
-			HWND clearButton = CreateWindow(L"Button", L"Очистить", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WIDTH / 2 - 50, HEIGHT - 70, 100, 20, hListBox, reinterpret_cast<HMENU>(Button_Click), nullptr, nullptr);
+			hListBox = CreateWindow(L"LISTBOX", NULL, WS_VISIBLE | LBS_STANDARD | WS_OVERLAPPEDWINDOW | WS_EX_TOPMOST, 300, 400, WIDTH, HEIGHT, NULL, NULL, NULL, NULL); //CreateWindow(L"listbox", nullptr, WS_VISIBLE | LBS_STANDARD | LBS_WANTKEYBOARDINPUT | WS_OVERLAPPEDWINDOW, 100, 100, 500, 500, hWnd, nullptr, hInst, nullptr);
+			HWND clearButton = CreateWindow(L"Button", L"Очистить", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, WIDTH / 2 - 50, HEIGHT - 70, 100, 20, hListBox, reinterpret_cast<HMENU>(ClearPlayers), nullptr, nullptr);
 			FILE* stream;
 			fopen_s(&stream, FileName, "rb+");
 			int len = _filelength(_fileno(stream)) / sizeof(Player);
@@ -431,7 +446,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 		}
 	}
 	break;
-	
+
 	case WM_DESTROY:
 		PostQuitMessage(0);
 
