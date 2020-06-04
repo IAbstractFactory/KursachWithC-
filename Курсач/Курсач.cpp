@@ -1,22 +1,34 @@
 ﻿// Курсач.cpp : Определяет точку входа для приложения.
 //
+#define _WINSOCK_DEPRECATED_NO_WARNINGS
+#pragma comment(lib,"Ws2_32.lib")
 
 #include "framework.h"
 #include "Курсач.h"
+
 #include <thread>
 #include"Time.h"
 #include"Player.h"
 #include<io.h>
 #include <cassert>
+
+#include<WinSock2.h>
+
+
+
 #define ButtonOk_Click 1231
 #define ShowPlayersButton_Click 2222
 #define LIST_ID 1233
 #define ClearPlayers 1435
 #define RestartButton_Click 1446
+#define CreateServer 1123
+#define ConnectToServer 3211
+
 using namespace std;
 HINSTANCE hInst;
 int Counter = 0;
 const char* FileName = "Players.txt";
+
 class Timer
 {
 	Time time;
@@ -57,10 +69,12 @@ public:
 };
 Timer timer;
 static HWND hListBox;
-int width = 1000;//МОЖНО МЕНЯТЬ 
+int width = 600;//МОЖНО МЕНЯТЬ 
 int height = 1000;//МОЖНО МЕНЯТЬ 
 int ButtonSize = 70;//МОЖНО МЕНЯТЬ 
+bool waiting = true;
 void ButtonMove(int TrueRecX, int TrueRecY, LPARAM lParam);
+void Waiting(HWND hWnd);
 class WinWindow
 {
 	const int thickness = 20;
@@ -241,12 +255,27 @@ bool GameStarted = false;
 bool WinAcces = false;
 bool victory = false;
 bool firstClick = false;
-
+bool answer = false;
 static HWND labelCounter;
 static HWND labelTimer;
 HWND SHOW_PLAYERS_BUTTON;
 HWND restartButton;
 HWND clearButton;
+HWND serverButton;
+HWND clientButton;
+void TestFunc(int this_s)
+{
+	while (true)
+	{
+
+		if (victory && !answer)
+		{
+			const char* mes = "v";
+			send(this_s, mes, strlen(mes), 0);
+
+		}
+	}
+}
 
 
 
@@ -332,11 +361,14 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 
 		SetTimer(hWnd, IDT_TIMER1, 1, (TIMERPROC)NULL);
+
 		labelCounter = CreateWindow(L"STATIC", L"COUNT 0", WS_CHILD | WS_VISIBLE, 10, 10, 100, 20, hWnd, nullptr, nullptr, nullptr);
 		labelTimer = CreateWindow(L"STATIC", L"TIME 0", WS_CHILD | WS_VISIBLE, 10, 30, 100, 20, hWnd, nullptr, nullptr, nullptr);
 
 		int w = width / 2 - 2 * ButtonSize;
 		int h = height / 2 - 4 * ButtonSize > 0 ? height / 2 - 4 * ButtonSize : 10;
+		serverButton = CreateWindow(L"Button", L"Открыть для сети", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, w / 2 - 140, h / 2 + 200, 150, 30, hWnd, reinterpret_cast<HMENU>(CreateServer), nullptr, nullptr);
+		serverButton = CreateWindow(L"Button", L"Найти игру", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, w / 2 - 140, h / 2 + 250, 150, 30, hWnd, reinterpret_cast<HMENU>(ConnectToServer), nullptr, nullptr);
 		clearButton = CreateWindow(L"Button", L"Очистить список", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, w / 2 - 140, h / 2 + 50, 150, 30, hWnd, reinterpret_cast<HMENU>(ClearPlayers), nullptr, nullptr);
 		SHOW_PLAYERS_BUTTON = CreateWindow(L"Button", L"Показать игроков", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, w / 2 - 140, h / 2 + 100, 150, 30, hWnd, reinterpret_cast<HMENU>(ShowPlayersButton_Click), nullptr, nullptr);
 		restartButton = CreateWindow(L"Button", L"Начать новую игру", WS_CHILD | WS_VISIBLE | BS_PUSHBUTTON, w / 2 - 140, h / 2 + 150, 150, 30, hWnd, reinterpret_cast<HMENU>(RestartButton_Click), nullptr, nullptr);
@@ -424,6 +456,77 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 
 		}
 		break;
+		case CreateServer:
+		{
+			thread th(Waiting, hWnd);
+			th.detach();
+
+
+			MessageBox(NULL, L"Waiting..", NULL, MB_OK);
+
+
+
+
+			/*while (waiting)
+			{
+				SOCKET acceptS;
+				SOCKADDR_IN addr_c;
+				int addrlen = sizeof(addr_c);
+				if ((acceptS = accept(this_s, (struct sockaddr*) & addr_c, &addrlen)) != 0)
+				{
+					MessageBox(hWnd, L"Connected", L"Connected", MB_OK);
+					char buffer[1024] = { 0 };
+					while (recv(acceptS, buffer, 1024, 0) != 0)
+					{
+						char buffer[1024] = { 0 };
+
+						recv(acceptS, buffer, 1024, 0);
+
+					}
+				}
+			}*/
+
+
+		}
+		break;
+		case ConnectToServer:
+		{
+			SOCKET this_s;
+			WSAData wData;
+			WSAStartup(MAKEWORD(2, 2), &wData);
+
+			SOCKADDR_IN addr;
+			int addrl = sizeof(addr);
+			addr.sin_addr.S_un.S_addr = inet_addr("127.0.0.1");
+			addr.sin_port = htons(8080);
+			addr.sin_family = AF_INET;
+			this_s = socket(AF_INET, SOCK_STREAM, NULL);
+
+			if (connect(this_s, (struct sockaddr*) & addr, sizeof(addr)) == SOCKET_ERROR)
+			{
+				MessageBox(hWnd, L"Connection Failed", L"", MB_OK);
+			}
+			else
+			{
+				MessageBox(hWnd, L"Connection Successful", L"", MB_OK);
+
+
+
+				thread tryth(TestFunc, this_s);
+				tryth.detach();
+				/*while (true)
+				{
+
+					char mes[1024];
+					gets_s(mes);
+
+					send(this_s, mes, strlen(mes), 0);
+				}*/
+
+			}
+
+		}
+		break;
 		case RestartButton_Click:
 		{
 			GameStarted = false;
@@ -506,6 +609,64 @@ INT_PTR CALLBACK About(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 		break;
 	}
 	return (INT_PTR)FALSE;
+}
+void Waiting(HWND hWnd)
+{
+
+	while (!answer)
+	{
+		HWND h = FindWindow(TEXT("#32770"), NULL);
+
+		//DestroyWindow(h);
+		if (h == NULL)
+		{
+			MessageBox(hWnd, L"Отменено", L"", MB_OK);
+			break;
+		}
+		else
+		{
+			SOCKET this_s;
+			WSAData wData;
+			WSAStartup(MAKEWORD(2, 2), &wData);
+
+			SOCKADDR_IN addr;
+			int addrl = sizeof(addr);
+			addr.sin_addr.S_un.S_addr = INADDR_ANY;
+			addr.sin_port = htons(8080);
+			addr.sin_family = AF_INET;
+			this_s = socket(AF_INET, SOCK_STREAM, NULL);
+			bind(this_s, (struct sockaddr*) & addr, sizeof(addr));
+			listen(this_s, SOMAXCONN);
+			SOCKET acceptS;
+			SOCKADDR_IN addr_c;
+			int addrlen = sizeof(addr_c);
+			if ((acceptS = accept(this_s, (struct sockaddr*) & addr_c, &addrlen)) != 0)
+			{
+				MessageBox(hWnd, L"Connected", L"Connected", MB_OK);
+				CloseWindow(h);
+				while (!answer)
+				{
+					char buffer[1024] = { 0 };
+
+					recv(acceptS, buffer, 1024, 0);
+					if (buffer == "v")
+					{
+						answer = true;
+					}
+						MessageBox(hWnd, L"Ваш противник победил!", L"", MB_OK);
+						answer = true;
+						closesocket(this_s);
+						WSACleanup();
+					
+					
+
+
+
+
+				}
+			}
+		}
+	}
 }
 void ButtonMove(int TrueRecX, int TrueRecY, LPARAM lParam)
 {
